@@ -932,8 +932,9 @@ def olustur_pdf(df, ulke, corr_val, kat_engag):
             pdf.cell(gw, 6, str(val), border=1, fill=True)
         pdf.ln()
 
-    def grafik_ekle(fig, yukseklik=90):
-        img = grafik_png(fig, w=180, h=yukseklik)
+    def grafik_ekle(fig):
+        # Yuksekligi Plotly'nin kendi height ayarindan alir, genislik W'ye orantili olceklenir
+        img = fig.to_image(format="png", width=1440, scale=1)
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
             f.write(img)
             fpath = f.name
@@ -1051,17 +1052,17 @@ def olustur_pdf(df, ulke, corr_val, kat_engag):
     pdf.add_page()
     bolum_basligi("3. En Cok Izlenen 10 Video")
     top10_pdf = df.nlargest(10, "goruntulenme")[["baslik", "goruntulenme"]].copy()
-    top10_pdf["baslik"] = top10_pdf["baslik"].apply(ascii_yap)
+    top10_pdf["baslik"] = top10_pdf["baslik"].apply(ascii_yap).str[:32]
     top10_pdf = top10_pdf.sort_values("goruntulenme")
     fig1 = px.bar(top10_pdf, x="goruntulenme", y="baslik", orientation="h",
                   color="goruntulenme", color_continuous_scale="Blues",
                   labels={"goruntulenme": "Goruntulenme", "baslik": ""})
     fig1.update_layout(showlegend=False, coloraxis_showscale=False,
-                       margin=dict(t=10, b=10, l=5, r=5), height=380,
+                       margin=dict(t=20, b=40, l=230, r=20), height=520,
                        plot_bgcolor="white", paper_bgcolor="white",
-                       font=dict(size=11))
+                       font=dict(size=12))
     fig1.update_xaxes(showgrid=True, gridcolor="#e0e0e0")
-    grafik_ekle(fig1, yukseklik=85)
+    grafik_ekle(fig1)
     pdf.ln(2)
 
     bolum_basligi("4. En Cok Izlenen 5 Video - Detay")
@@ -1095,19 +1096,22 @@ def olustur_pdf(df, ulke, corr_val, kat_engag):
     fig2.update_layout(showlegend=True, legend=dict(orientation="v", x=1, y=0.5),
                        margin=dict(t=10, b=10, l=5, r=80), height=320,
                        paper_bgcolor="white")
-    grafik_ekle(fig2, yukseklik=72)
+    grafik_ekle(fig2)
 
     bolum_basligi("6. Kategoriye Gore Ortalama Etkilesim Orani")
     ke = kat_engag.copy()
-    ke["kategori"] = ke["kategori"].apply(ascii_yap)
+    ke["kategori"] = ke["kategori"].apply(ascii_yap).str[:28]
+    n_kat = len(ke)
     fig4 = px.bar(ke, x="etkilesim_orani", y="kategori", orientation="h",
                   color="etkilesim_orani", color_continuous_scale="Greens",
                   labels={"etkilesim_orani": "Ort. Etkilesim %", "kategori": ""})
     fig4.update_layout(showlegend=False, coloraxis_showscale=False,
-                       margin=dict(t=10, b=10, l=5, r=5), height=320,
-                       plot_bgcolor="white", paper_bgcolor="white")
+                       margin=dict(t=20, b=40, l=190, r=20),
+                       height=max(320, n_kat * 38 + 80),
+                       plot_bgcolor="white", paper_bgcolor="white",
+                       font=dict(size=12))
     fig4.update_xaxes(showgrid=True, gridcolor="#e0e0e0")
-    grafik_ekle(fig4, yukseklik=72)
+    grafik_ekle(fig4)
 
     # =============================================
     # SAYFA 5 - KORELASYON
@@ -1130,7 +1134,7 @@ def olustur_pdf(df, ulke, corr_val, kat_engag):
                      zmin=-1, zmax=1)
     fig3.update_layout(margin=dict(t=10, b=10, l=5, r=5), height=360,
                        paper_bgcolor="white", font=dict(size=11))
-    grafik_ekle(fig3, yukseklik=80)
+    grafik_ekle(fig3)
 
     # =============================================
     # SAYFA 6 - DEGERLENDIRME

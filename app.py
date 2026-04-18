@@ -844,6 +844,14 @@ st.divider()
 st.header("PDF Raporu")
 st.markdown("Analiz sonuclarini PDF olarak indirmek icin asagidaki butona tiklayin.")
 
+def ascii_yap(metin: str) -> str:
+    """Turkce ve diger Unicode karakterleri ASCII karsiligina donusturur."""
+    tablo = str.maketrans(
+        "çÇşŞğĞüÜöÖıİâÂêÊîÎôÔûÛàèìòùÀÈÌÒÙáéíóúÁÉÍÓÚ",
+        "cCsSgGuUoOiIaAeEiIoOuUaeiouAEIOUaeiouAEIOU"
+    )
+    return metin.translate(tablo)
+
 def grafik_png(fig, w=180, h=90):
     """Plotly figuru PNG byte dizisine cevirir."""
     return fig.to_image(format="png", width=w*4, height=h*4, scale=1)
@@ -853,11 +861,13 @@ def olustur_pdf(df, ulke, corr_val, kat_engag):
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
 
+    s = ascii_yap  # kisaltma
+
     # Baslik
     pdf.set_font("Helvetica", "B", 18)
     pdf.cell(0, 10, "YouTube Trend Video Analizi", ln=True, align="C")
     pdf.set_font("Helvetica", "", 11)
-    pdf.cell(0, 7, f"Bolge: {ulke}  |  Video Sayisi: {len(df)}  |  Kaynak: YouTube Data API v3", ln=True, align="C")
+    pdf.cell(0, 7, s(f"Bolge: {ulke}  |  Video Sayisi: {len(df)}  |  Kaynak: YouTube Data API v3"), ln=True, align="C")
     pdf.ln(4)
 
     # Ozet metrikler
@@ -870,7 +880,7 @@ def olustur_pdf(df, ulke, corr_val, kat_engag):
         ("Medyan Goruntulenme",   f"{df['goruntulenme'].median():,.0f}"),
         ("Toplam Begeni",         f"{df['begeni'].sum():,}"),
         ("Ortalama Etkilesim %",  f"{df['etkilesim_orani'].mean():.4f}%"),
-        ("En Populer Kategori",   df['kategori'].value_counts().idxmax()),
+        ("En Populer Kategori",   s(df['kategori'].value_counts().idxmax())),
         ("Benzersiz Kanal",       str(df['kanal'].nunique())),
         ("Pearson r (gor~beg)",   f"{corr_val:.4f}"),
     ]
@@ -911,8 +921,8 @@ def olustur_pdf(df, ulke, corr_val, kat_engag):
     top5 = df.nlargest(5, "goruntulenme")[["baslik", "kanal", "goruntulenme"]].reset_index(drop=True)
     for i, row in top5.iterrows():
         pdf.cell(10, 6, str(i+1), border=1)
-        pdf.cell(95, 6, row["baslik"][:50], border=1)
-        pdf.cell(45, 6, row["kanal"][:22], border=1)
+        pdf.cell(95, 6, s(row["baslik"][:50]), border=1)
+        pdf.cell(45, 6, s(row["kanal"][:22]), border=1)
         pdf.cell(30, 6, f"{row['goruntulenme']:,}", border=1, ln=True)
     pdf.ln(5)
 
@@ -920,7 +930,9 @@ def olustur_pdf(df, ulke, corr_val, kat_engag):
     pdf.add_page()
     pdf.set_font("Helvetica", "B", 13)
     pdf.cell(0, 8, "En Cok Izlenen 10 Video", ln=True)
-    top10_pdf = df.nlargest(10, "goruntulenme")[["baslik", "goruntulenme"]].sort_values("goruntulenme")
+    top10_pdf = df.nlargest(10, "goruntulenme")[["baslik", "goruntulenme"]].copy()
+    top10_pdf["baslik"] = top10_pdf["baslik"].apply(ascii_yap)
+    top10_pdf = top10_pdf.sort_values("goruntulenme")
     fig1 = px.bar(top10_pdf, x="goruntulenme", y="baslik", orientation="h",
                   color="goruntulenme", color_continuous_scale="Blues")
     fig1.update_layout(showlegend=False, margin=dict(t=20,b=20,l=10,r=10), height=400)
@@ -935,6 +947,7 @@ def olustur_pdf(df, ulke, corr_val, kat_engag):
     pdf.cell(0, 8, "Kategori Dagilimi", ln=True)
     kat_say = df["kategori"].value_counts().reset_index()
     kat_say.columns = ["Kategori", "Sayi"]
+    kat_say["Kategori"] = kat_say["Kategori"].apply(ascii_yap)
     fig2 = px.pie(kat_say, values="Sayi", names="Kategori",
                   color_discrete_sequence=px.colors.qualitative.Set2, hole=0.3)
     fig2.update_traces(textposition="inside", textinfo="percent+label")
@@ -963,7 +976,9 @@ def olustur_pdf(df, ulke, corr_val, kat_engag):
     # Grafik 4: Etkilesim orani bar
     pdf.set_font("Helvetica", "B", 13)
     pdf.cell(0, 8, "Kategoriye Gore Ortalama Etkilesim Orani", ln=True)
-    fig4 = px.bar(kat_engag, x="etkilesim_orani", y="kategori", orientation="h",
+    ke = kat_engag.copy()
+    ke["kategori"] = ke["kategori"].apply(ascii_yap)
+    fig4 = px.bar(ke, x="etkilesim_orani", y="kategori", orientation="h",
                   color="etkilesim_orani", color_continuous_scale="Greens")
     fig4.update_layout(showlegend=False, margin=dict(t=20,b=20,l=10,r=10), height=350)
     img4 = grafik_png(fig4)
@@ -977,13 +992,13 @@ def olustur_pdf(df, ulke, corr_val, kat_engag):
     pdf.cell(0, 8, "Genel Degerlendirme", ln=True)
     pdf.set_font("Helvetica", "", 10)
     bulgular = [
-        f"- Gozlem sayisi: {len(df)} trend video ({ulke})",
-        f"- Goruntulenme dagilimi sagdan carpik (log-normal) bir yapi sergilemektedir.",
+        f"- Gozlem sayisi: {len(df)} trend video ({s(ulke)})",
+        "- Goruntulenme dagilimi sagdan carpik (log-normal) bir yapi sergilemektedir.",
         f"- Pearson korelasyonu (goruntulenme ~ begeni): r = {corr_val:.4f}",
         f"  {'Guclu pozitif iliski' if corr_val > 0.7 else 'Orta duzey iliski' if corr_val > 0.4 else 'Zayif iliski'} tespit edilmistir.",
-        f"- En yuksek etkilesim orani: {kat_engag.iloc[0]['kategori']} kategorisi",
-        f"- En fazla trend video: {df['kategori'].value_counts().idxmax()} kategorisi",
-        f"- Orta uzunluktaki videolar (5-20 dk) goruntulenme acisindan en verimli aralik.",
+        f"- En yuksek etkilesim orani: {s(kat_engag.iloc[0]['kategori'])} kategorisi",
+        f"- En fazla trend video: {s(df['kategori'].value_counts().idxmax())} kategorisi",
+        "- Orta uzunluktaki videolar (5-20 dk) goruntulenme acisindan en verimli aralik.",
     ]
     for b in bulgular:
         pdf.multi_cell(0, 7, b)

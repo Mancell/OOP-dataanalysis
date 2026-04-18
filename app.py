@@ -55,8 +55,10 @@ ULKELER = {
 # ─────────────────────────────────────────────────────────────
 @st.cache_resource(show_spinner=False)
 def get_client():
+    # Streamlit Cloud secrets veya lokal .env'den oku
+    api_key = st.secrets.get("YOUTUBE_API_KEY", None) if hasattr(st, "secrets") else None
     try:
-        return YouTubeClient()
+        return YouTubeClient(api_key=api_key)
     except InvalidInputError:
         return None
 
@@ -64,7 +66,7 @@ client = get_client()
 cleaner = DataCleaner()
 
 if client is None:
-    st.error(".env dosyasinda YOUTUBE_API_KEY tanimlanmamis.")
+    st.error("API anahtari bulunamadi. Streamlit secrets veya .env dosyasini kontrol edin.")
     st.stop()
 
 

@@ -9,4 +9,4 @@ matplotlib
 scipy
 statsmodels
 fpdf2
-kaleido
+kaleido==0.2.1

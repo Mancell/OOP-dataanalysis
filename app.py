@@ -172,23 +172,100 @@ st.markdown(
 #  Hizli Istatistikler
 # ─────────────────────────────────────────────────────────────
 st.divider()
-st.subheader("Hizli Istatistikler")
+st.subheader("Genel Istatistikler")
 
 c1, c2, c3, c4, c5, c6 = st.columns(6)
-c1.metric("Toplam Video",         f"{len(df)}")
-c2.metric("Toplam Goruntulenme",  f"{df['goruntulenme'].sum() / 1_000_000:.1f}M")
-c3.metric("Ort. Goruntulenme",    f"{df['goruntulenme'].mean() / 1_000:.0f}B")
+c1.metric("Toplam Video",           f"{len(df)}")
+c2.metric("Toplam Goruntulenme",    f"{df['goruntulenme'].sum() / 1_000_000:.1f}M")
+c3.metric("Ort. Goruntulenme",      f"{df['goruntulenme'].mean() / 1_000:.0f}B")
 c4.metric("En Yuksek Goruntulenme", f"{df['goruntulenme'].max() / 1_000_000:.1f}M")
-c5.metric("Ort. Etkilesim %",     f"{df['etkilesim_orani'].mean():.3f}%")
-c6.metric("Ort. Sure",            f"{df['sure_dk'].mean():.1f} dk")
+c5.metric("Ort. Etkilesim %",       f"{df['etkilesim_orani'].mean():.3f}%")
+c6.metric("Ort. Sure",              f"{df['sure_dk'].mean():.1f} dk")
 
 c7, c8, c9, c10, c11, c12 = st.columns(6)
-c7.metric("Toplam Begeni",        f"{df['begeni'].sum() / 1_000_000:.1f}M")
-c8.metric("Toplam Yorum",         f"{df['yorum'].sum() / 1_000:.0f}B")
-c9.metric("Ort. Begeni",          f"{df['begeni'].mean() / 1_000:.0f}B")
-c10.metric("Ort. Yorum",          f"{df['yorum'].mean():.0f}")
-c11.metric("En Populer Kategori", df['kategori'].value_counts().idxmax())
-c12.metric("Benzersiz Kanal",     f"{df['kanal'].nunique()}")
+c7.metric("Toplam Begeni",          f"{df['begeni'].sum() / 1_000_000:.1f}M")
+c8.metric("Toplam Yorum",           f"{df['yorum'].sum() / 1_000:.0f}B")
+c9.metric("Ort. Begeni",            f"{df['begeni'].mean() / 1_000:.0f}B")
+c10.metric("Ort. Yorum",            f"{df['yorum'].mean():.0f}")
+c11.metric("En Populer Kategori",   df['kategori'].value_counts().idxmax())
+c12.metric("Benzersiz Kanal",       f"{df['kanal'].nunique()}")
+
+c13, c14, c15, c16, c17, c18 = st.columns(6)
+c13.metric("Min Goruntulenme",      f"{df['goruntulenme'].min():,}")
+c14.metric("Medyan Goruntulenme",   f"{df['goruntulenme'].median() / 1_000:.0f}B")
+c15.metric("Std Sapma (Gor.)",      f"{df['goruntulenme'].std() / 1_000_000:.1f}M")
+c16.metric("Max Begeni",            f"{df['begeni'].max() / 1_000:.0f}B")
+c17.metric("Max Yorum",             f"{df['yorum'].max():,}")
+c18.metric("En Uzun Video",         f"{df['sure_dk'].max():.0f} dk")
+
+st.divider()
+
+# ─── Hizli Grafikler ───────────────────────────────────────
+st.subheader("Hizli Grafikler")
+
+hg1, hg2, hg3 = st.columns(3)
+
+with hg1:
+    top10 = df.nlargest(10, "goruntulenme")[["baslik", "goruntulenme"]].sort_values("goruntulenme")
+    fig_top10 = px.bar(
+        top10, x="goruntulenme", y="baslik", orientation="h",
+        title="En Cok Izlenen 10 Video",
+        labels={"goruntulenme": "Goruntulenme", "baslik": ""},
+        color="goruntulenme", color_continuous_scale="Blues",
+    )
+    fig_top10.update_layout(coloraxis_showscale=False, margin=dict(t=40, b=10, l=5, r=10), height=350)
+    st.plotly_chart(fig_top10, use_container_width=True)
+
+with hg2:
+    kat_ort = df.groupby("kategori")["goruntulenme"].mean().sort_values(ascending=False).reset_index()
+    kat_ort.columns = ["Kategori", "Ort. Goruntulenme"]
+    fig_kat_ort = px.bar(
+        kat_ort, x="Kategori", y="Ort. Goruntulenme",
+        title="Kategoriye Gore Ort. Goruntulenme",
+        color="Ort. Goruntulenme", color_continuous_scale="Oranges",
+    )
+    fig_kat_ort.update_layout(
+        coloraxis_showscale=False,
+        xaxis_tickangle=-35,
+        margin=dict(t=40, b=60, l=5, r=10),
+        height=350,
+    )
+    st.plotly_chart(fig_kat_ort, use_container_width=True)
+
+with hg3:
+    top10_eng = df.nlargest(10, "etkilesim_orani")[["baslik", "etkilesim_orani"]].sort_values("etkilesim_orani")
+    fig_eng10 = px.bar(
+        top10_eng, x="etkilesim_orani", y="baslik", orientation="h",
+        title="En Yuksek Etkilesim 10 Video",
+        labels={"etkilesim_orani": "Etkilesim %", "baslik": ""},
+        color="etkilesim_orani", color_continuous_scale="Greens",
+    )
+    fig_eng10.update_layout(coloraxis_showscale=False, margin=dict(t=40, b=10, l=5, r=10), height=350)
+    st.plotly_chart(fig_eng10, use_container_width=True)
+
+hg4, hg5 = st.columns(2)
+
+with hg4:
+    fig_begeni_hist = px.histogram(
+        df, x="begeni", nbins=15,
+        title="Begeni Sayisi Dagilimi",
+        labels={"begeni": "Begeni", "count": "Video Sayisi"},
+        color_discrete_sequence=["#f783ac"],
+    )
+    fig_begeni_hist.update_layout(bargap=0.05, margin=dict(t=40, b=30), height=300)
+    st.plotly_chart(fig_begeni_hist, use_container_width=True)
+
+with hg5:
+    fig_yorum_box = px.box(
+        df, x="kategori", y="yorum",
+        title="Kategoriye Gore Yorum Dagilimi",
+        labels={"yorum": "Yorum Sayisi", "kategori": "Kategori"},
+        color="kategori",
+        color_discrete_sequence=px.colors.qualitative.Pastel,
+        points=False,
+    )
+    fig_yorum_box.update_layout(showlegend=False, xaxis_tickangle=-35, margin=dict(t=40, b=60), height=300)
+    st.plotly_chart(fig_yorum_box, use_container_width=True)
 
 st.divider()
 

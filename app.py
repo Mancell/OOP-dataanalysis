@@ -167,6 +167,29 @@ st.markdown(
     f"**Video sayisi:** {len(df)} &nbsp;|&nbsp; "
     f"**Veri kaynagi:** YouTube Data API v3"
 )
+
+# ─────────────────────────────────────────────────────────────
+#  Hizli Istatistikler
+# ─────────────────────────────────────────────────────────────
+st.divider()
+st.subheader("Hizli Istatistikler")
+
+c1, c2, c3, c4, c5, c6 = st.columns(6)
+c1.metric("Toplam Video",         f"{len(df)}")
+c2.metric("Toplam Goruntulenme",  f"{df['goruntulenme'].sum() / 1_000_000:.1f}M")
+c3.metric("Ort. Goruntulenme",    f"{df['goruntulenme'].mean() / 1_000:.0f}B")
+c4.metric("En Yuksek Goruntulenme", f"{df['goruntulenme'].max() / 1_000_000:.1f}M")
+c5.metric("Ort. Etkilesim %",     f"{df['etkilesim_orani'].mean():.3f}%")
+c6.metric("Ort. Sure",            f"{df['sure_dk'].mean():.1f} dk")
+
+c7, c8, c9, c10, c11, c12 = st.columns(6)
+c7.metric("Toplam Begeni",        f"{df['begeni'].sum() / 1_000_000:.1f}M")
+c8.metric("Toplam Yorum",         f"{df['yorum'].sum() / 1_000:.0f}B")
+c9.metric("Ort. Begeni",          f"{df['begeni'].mean() / 1_000:.0f}B")
+c10.metric("Ort. Yorum",          f"{df['yorum'].mean():.0f}")
+c11.metric("En Populer Kategori", df['kategori'].value_counts().idxmax())
+c12.metric("Benzersiz Kanal",     f"{df['kanal'].nunique()}")
+
 st.divider()
 
 

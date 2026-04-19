@@ -756,8 +756,11 @@ def ascii_yap(metin: str) -> str:
     return metin
 
 def grafik_png(fig, w=180, h=90):
-    """Plotly figuru PNG byte dizisine cevirir."""
-    return fig.to_image(format="png", width=w*4, height=h*4, scale=1)
+    """Plotly figuru PNG byte dizisine cevirir. Kaleido yoksa None doner."""
+    try:
+        return fig.to_image(format="png", width=w*4, height=h*4, scale=1)
+    except Exception:
+        return None
 
 def olustur_pdf(df, ulke, corr_val, kat_engag):
     import datetime
@@ -844,8 +847,10 @@ def olustur_pdf(df, ulke, corr_val, kat_engag):
         pdf.polygon(pts, style="F")
 
     def grafik_ekle(fig):
-        # Yuksekligi Plotly'nin kendi height ayarindan alir, genislik W'ye orantili olceklenir
-        img = fig.to_image(format="png", width=1440, scale=1)
+        try:
+            img = fig.to_image(format="png", width=1440, scale=1)
+        except Exception:
+            return
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
             f.write(img)
             fpath = f.name

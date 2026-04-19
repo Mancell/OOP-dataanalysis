@@ -166,7 +166,7 @@ with st.sidebar:
     st.header("Veri Ayarlari")
     ulke_adi  = st.selectbox("Ulke", list(ULKELER.keys()), index=0)
     video_say = st.slider("Video sayisi", 10, 50, 50, step=10)
-    getir_btn = st.button("Veriyi Getir", use_container_width=True, type="primary")
+    getir_btn = st.button("Veriyi Getir", width="stretch", type="primary")
     st.divider()
     st.markdown("**Hakkinda**")
     st.caption("YouTube Data API v3 kullanilarak cekilen trend video verileri uzerinde istatistiksel analiz yapilmaktadir.")
@@ -218,7 +218,7 @@ st.caption("YouTube Data API v3 ile cekilen ham veri. Her satir bir trend videoy
 
 df_display = df.copy()
 df_display.insert(0, "No", range(1, len(df_display) + 1))
-st.dataframe(df_display.set_index("No"), use_container_width=True, hide_index=False)
+st.dataframe(df_display.set_index("No"), width="stretch", hide_index=False)
 
 csv_bytes = df_display.to_csv(index=True).encode("utf-8")
 st.download_button(
@@ -275,7 +275,7 @@ fig_top10 = px.bar(
 )
 fig_top10.update_traces(texttemplate="%{text:,}", textposition="outside")
 fig_top10.update_layout(coloraxis_showscale=False, margin=dict(t=50, b=20, l=10, r=80), height=420)
-st.plotly_chart(fig_top10, use_container_width=True)
+st.plotly_chart(fig_top10, width="stretch")
 
 # Grafik 2: En yuksek etkilesim oranlı 10 video
 top10_eng = df.nlargest(10, "etkilesim_orani")[["baslik", "kanal", "etkilesim_orani"]].sort_values("etkilesim_orani")
@@ -289,7 +289,7 @@ fig_eng10 = px.bar(
 )
 fig_eng10.update_traces(texttemplate="%{text:.3f}%", textposition="outside")
 fig_eng10.update_layout(coloraxis_showscale=False, margin=dict(t=50, b=20, l=10, r=80), height=420)
-st.plotly_chart(fig_eng10, use_container_width=True)
+st.plotly_chart(fig_eng10, width="stretch")
 
 # Grafik 3: Kategoriye gore ortalama goruntulenme
 kat_ort = df.groupby("kategori")["goruntulenme"].mean().sort_values(ascending=False).reset_index()
@@ -308,7 +308,7 @@ fig_kat_ort.update_layout(
     margin=dict(t=50, b=80, l=10, r=20),
     height=420,
 )
-st.plotly_chart(fig_kat_ort, use_container_width=True)
+st.plotly_chart(fig_kat_ort, width="stretch")
 
 # Grafik 4: Begeni sayisi dagilimi
 fig_begeni_hist = px.histogram(
@@ -319,7 +319,7 @@ fig_begeni_hist = px.histogram(
 )
 fig_begeni_hist.update_traces(marker_line_color="white", marker_line_width=1)
 fig_begeni_hist.update_layout(bargap=0.05, margin=dict(t=50, b=40), height=400)
-st.plotly_chart(fig_begeni_hist, use_container_width=True)
+st.plotly_chart(fig_begeni_hist, width="stretch")
 
 # Grafik 5: Kategoriye gore ortalama yorum bar chart
 kat_yorum = df.groupby("kategori")["yorum"].mean().reset_index().sort_values("yorum", ascending=True)
@@ -338,7 +338,7 @@ fig_yorum_bar.update_layout(
     margin=dict(t=50, b=20, l=10, r=80),
     height=420,
 )
-st.plotly_chart(fig_yorum_bar, use_container_width=True)
+st.plotly_chart(fig_yorum_bar, width="stretch")
 
 # Grafik 5: Kanal bazli toplam goruntulenme (en cok izlenen 15 kanal)
 kanal_hizli = (
@@ -358,7 +358,7 @@ fig_kanal_hizli = px.bar(
 )
 fig_kanal_hizli.update_traces(texttemplate="%{text:,}", textposition="outside")
 fig_kanal_hizli.update_layout(coloraxis_showscale=False, margin=dict(t=50, b=20, l=10, r=80), height=500)
-st.plotly_chart(fig_kanal_hizli, use_container_width=True)
+st.plotly_chart(fig_kanal_hizli, width="stretch")
 
 st.divider()
 
@@ -392,7 +392,7 @@ with col_k1:
     )
     fig_pie.update_traces(textposition="inside", textinfo="percent+label")
     fig_pie.update_layout(showlegend=False, margin=dict(t=50, b=10, l=10, r=10))
-    st.plotly_chart(fig_pie, use_container_width=True)
+    st.plotly_chart(fig_pie, width="stretch")
 
 with col_k2:
     fig_kat = px.bar(
@@ -405,7 +405,7 @@ with col_k2:
     )
     fig_kat.update_traces(textposition="outside")
     fig_kat.update_layout(coloraxis_showscale=False, margin=dict(t=50, b=10, l=10, r=30))
-    st.plotly_chart(fig_kat, use_container_width=True)
+    st.plotly_chart(fig_kat, width="stretch")
 
 st.divider()
 
@@ -433,7 +433,7 @@ fig_hist = px.histogram(
     color_discrete_sequence=["#4dabf7"],
 )
 fig_hist.update_layout(bargap=0.05, margin=dict(t=50, b=30))
-st.plotly_chart(fig_hist, use_container_width=True)
+st.plotly_chart(fig_hist, width="stretch")
 
 
 st.divider()
@@ -474,7 +474,7 @@ fig_scatter = px.scatter(
     opacity=0.8,
 )
 fig_scatter.update_layout(margin=dict(t=50, b=30))
-st.plotly_chart(fig_scatter, use_container_width=True)
+st.plotly_chart(fig_scatter, width="stretch")
 
 # Pearson korelasyon
 corr_val = df["goruntulenme"].corr(df["begeni"])
@@ -524,7 +524,7 @@ fig_heat = px.imshow(
     aspect="auto",
 )
 fig_heat.update_layout(margin=dict(t=60, b=40, l=40, r=40))
-st.plotly_chart(fig_heat, use_container_width=True)
+st.plotly_chart(fig_heat, width="stretch")
 
 st.divider()
 
@@ -557,7 +557,7 @@ with col_d1:
         hover_name="baslik",
     )
     fig_dur_scat.update_layout(showlegend=False, margin=dict(t=50, b=30))
-    st.plotly_chart(fig_dur_scat, use_container_width=True)
+    st.plotly_chart(fig_dur_scat, width="stretch")
 
 with col_d2:
     bins = [0, 2, 5, 10, 20, 60, 300]
@@ -581,7 +581,7 @@ with col_d2:
     )
     fig_dur_bar.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
     fig_dur_bar.update_layout(coloraxis_showscale=False, margin=dict(t=50, b=30, r=20))
-    st.plotly_chart(fig_dur_bar, use_container_width=True)
+    st.plotly_chart(fig_dur_bar, width="stretch")
 
 st.divider()
 
@@ -630,7 +630,7 @@ fig_kanal = px.bar(
 )
 fig_kanal.update_traces(texttemplate="%{text} video", textposition="inside")
 fig_kanal.update_layout(margin=dict(t=50, b=10, l=10, r=20))
-st.plotly_chart(fig_kanal, use_container_width=True)
+st.plotly_chart(fig_kanal, width="stretch")
 
 st.divider()
 
@@ -682,7 +682,7 @@ fig_saat.update_layout(
 )
 fig_saat.update_yaxes(title_text="Video Sayisi", secondary_y=False)
 fig_saat.update_yaxes(title_text="Ort. Goruntulenme", secondary_y=True)
-st.plotly_chart(fig_saat, use_container_width=True)
+st.plotly_chart(fig_saat, width="stretch")
 
 st.divider()
 
@@ -701,14 +701,14 @@ with col_e1:
     st.dataframe(
         top3.rename(columns={"baslik": "Baslik", "kanal": "Kanal",
                               "goruntulenme": "Goruntulenme", "etkilesim_orani": "Etkilesim %"}),
-        use_container_width=True, hide_index=True,
+        width="stretch", hide_index=True,
     )
 with col_e2:
     st.markdown("**En Yuksek Etkilesim Oranlı 3 Video**")
     st.dataframe(
         en_etkilesim.rename(columns={"baslik": "Baslik", "kanal": "Kanal",
                                       "etkilesim_orani": "Etkilesim %"}),
-        use_container_width=True, hide_index=True,
+        width="stretch", hide_index=True,
     )
 
 st.markdown(

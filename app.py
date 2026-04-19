@@ -40,20 +40,20 @@ st.markdown("""
 <style>
 /* Plotly grafik kartlari */
 [data-testid="stPlotlyChart"] > div {
-    border: 1px solid #e2e8f0;
+    border: 1px solid #334155;
     border-radius: 12px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
     padding: 8px;
-    background: white;
+    background: #1e293b;
     overflow: hidden;
 }
 
 /* Dataframe / tablo kartlari */
 [data-testid="stDataFrame"],
 [data-testid="stTable"] {
-    border: 1px solid #e2e8f0;
+    border: 1px solid #334155;
     border-radius: 12px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
     overflow: hidden;
 }
 </style>
@@ -218,7 +218,7 @@ st.caption("YouTube Data API v3 ile cekilen ham veri. Her satir bir trend videoy
 
 df_display = df.copy()
 df_display.insert(0, "No", range(1, len(df_display) + 1))
-st.table(df_display.set_index("No"))
+st.dataframe(df_display.set_index("No"), use_container_width=True, hide_index=False)
 
 csv_bytes = df_display.to_csv(index=True).encode("utf-8")
 st.download_button(

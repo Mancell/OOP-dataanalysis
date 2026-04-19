@@ -301,17 +301,7 @@ fig_kat_ort.update_layout(
 )
 st.plotly_chart(fig_kat_ort, use_container_width=True)
 
-# Grafik 4: Begeni sayisi dagilimi
-fig_begeni_hist = px.histogram(
-    df, x="begeni", nbins=15,
-    title="Begeni Sayisi Dagilimi",
-    labels={"begeni": "Begeni Sayisi", "count": "Video Sayisi"},
-    color_discrete_sequence=["#f783ac"],
-)
-fig_begeni_hist.update_layout(bargap=0.05, margin=dict(t=50, b=40), height=400)
-st.plotly_chart(fig_begeni_hist, use_container_width=True)
-
-# Grafik 5: Kategoriye gore yorum box plot
+# Grafik 4: Kategoriye gore yorum box plot
 fig_yorum_box = px.box(
     df, x="kategori", y="yorum",
     title="Kategoriye Gore Yorum Sayisi Dagilimi",
@@ -328,7 +318,7 @@ fig_yorum_box.update_layout(
 )
 st.plotly_chart(fig_yorum_box, use_container_width=True)
 
-# Grafik 6: Kanal bazli toplam goruntulenme (en cok izlenen 15 kanal)
+# Grafik 5: Kanal bazli toplam goruntulenme (en cok izlenen 15 kanal)
 kanal_hizli = (
     df.groupby("kanal")["goruntulenme"].sum()
     .sort_values(ascending=False)

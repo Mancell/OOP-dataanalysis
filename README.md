@@ -94,7 +94,7 @@ Bu proje, Streamlit ile yazılmış tek sayfalık bir **YouTube trend video anal
 
 - **Veri Seti**: Çekilen veriyi tabloda gösterme + CSV indirme
 - **Genel İstatistikler**: Toplam/ortalama metrik kartları
-- **Hızlı Grafikler**: Top 10 izlenme, top 10 etkileşim, kategori ortalamaları vb.
+- **Hızlı Grafikler**: Top 10 izlenme, top 10 etkileşim, kategori ortalamaları, kategori bazlı yorum dağılımı (box), en çok izlenen kanallar (toplam görüntülenme)
 - **1. Betimsel İstatistikler**
 - **2. Kategori Dağılımı**
 - **3. Görüntülenme Dağılımı** (histogram/box + log ölçekli histogram)

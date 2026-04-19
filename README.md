@@ -29,14 +29,12 @@ YouTube Data API v3 kullanan, OOP mimarisiyle yazılmış Python veri analizi pr
 
 ### 4) En Az 3 Farklı Veri Görselleştirme
 
-- `app.py` içinde kullanılan görselleştirmelerden bazıları:
-  - `px.bar(...)` (bar chart)
-  - `px.histogram(...)` (histogram)
-  - `px.scatter(..., trendline="ols")` (scatter)
-  - `px.pie(...)` (pie chart)
-  - `px.box(...)` (box plot)
-  - `px.imshow(...)` (heatmap)
-  - `px.violin(...)` (violin plot)
+- `app.py` içinde kullanılan görselleştirmeler:
+  - `px.bar(...)` — bar chart (kategori dağılımı, kanal performansı, yorum ortalaması)
+  - `px.histogram(...)` — histogram (görüntülenme ve beğeni dağılımı)
+  - `px.scatter(..., trendline="ols")` — scatter (beğeni–görüntülenme ilişkisi)
+  - `px.pie(...)` — pasta grafik (kategori dağılımı)
+  - `px.imshow(...)` — heatmap (korelasyon matrisi)
 
 ### 5) Hata Yönetimi
 
@@ -61,7 +59,7 @@ OOP-DataAnalysis-Project/
 │   │   ├── video.py
 │   │   └── channel.py
 │   ├── services/
-│   │   ├── data_cleaner.py
+│   │   └── data_cleaner.py
 │   └── utils/
 │       └── exceptions.py
 ├── app.py
@@ -86,23 +84,21 @@ Bu proje, Streamlit ile yazılmış tek sayfalık bir **YouTube trend video anal
 ### Veri Kaynağı ve Seçim
 
 - **Veri kaynağı**: YouTube Data API v3
-- **Filtreler**: Ülke (region) ve video sayısı
+- **Filtreler**: Ülke (region) ve video sayısı (10–50)
 
 ### Analiz Bölümleri
 
-`app.py` içinde yer alan başlıca analiz ve görselleştirmenin bölümleri:
+`app.py` içinde yer alan analiz ve görselleştirme bölümleri:
 
-- **Veri Seti**: Çekilen veriyi tabloda gösterme + CSV indirme
+- **Veri Seti**: Ham veriyi scroll olmadan tam liste şeklinde gösterme + CSV indirme
 - **Genel İstatistikler**: Toplam/ortalama metrik kartları
-- **Hızlı Grafikler**: Top 10 izlenme, top 10 etkileşim, kategori ortalamaları, kategori bazlı yorum dağılımı (box), en çok izlenen kanallar (toplam görüntülenme)
-- **1. Betimsel İstatistikler**
-- **2. Kategori Dağılımı**
-- **3. Görüntülenme Dağılımı** (histogram/box + log ölçekli histogram)
-- **4. Beğeni ile Görüntülenme Arasındaki İlişki** (scatter + OLS trendline)
-- **5. Etkileşim Oranı Analizi** (bar + violin)
-- **6. Değişkenler Arası Korelasyon Matrisi** (heatmap)
-- **7. Video Süresi ve Performans**
-- **8. Kanal Bazlı Performans**
-- **9. Yayın Saati ve Görüntülenme İlişkisi**
-- **10. Genel Değerlendirme**
+- **Hızlı Grafikler**: Top 10 izlenme, top 10 etkileşim, kategori ortalamaları, kategoriye göre ortalama yorum, en çok izlenen kanallar
+- **1. Kategori Dağılımı** (pasta + bar chart)
+- **2. Görüntülenme Dağılımı** (histogram)
+- **3. Beğeni ile Görüntülenme Arasındaki İlişki** (scatter + OLS trendline)
+- **4. Değişkenler Arası Korelasyon Matrisi** (heatmap)
+- **5. Video Süresi ve Performans**
+- **6. Kanal Bazlı Performans**
+- **7. Yayın Saati ve Görüntülenme İlişkisi**
+- **8. Genel Değerlendirme**
 - **PDF Raporu** ve **Excel Raporu (.xlsx)** indirme

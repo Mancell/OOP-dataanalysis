@@ -36,6 +36,29 @@ st.set_page_config(
     layout="wide",
 )
 
+st.markdown("""
+<style>
+/* Plotly grafik kartlari */
+[data-testid="stPlotlyChart"] > div {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    padding: 8px;
+    background: white;
+    overflow: hidden;
+}
+
+/* Dataframe / tablo kartlari */
+[data-testid="stDataFrame"],
+[data-testid="stTable"] {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+</style>
+""", unsafe_allow_html=True)
+
 CATEGORY_NAMES = {
     "1": "Film & Animasyon", "2": "Otomobil", "10": "Muzik",
     "15": "Evcil Hayvanlar", "17": "Spor", "20": "Oyun",
@@ -193,23 +216,9 @@ st.divider()
 st.subheader("Veri Seti")
 st.caption("YouTube Data API v3 ile cekilen ham veri. Her satir bir trend videoyu temsil eder.")
 
-df_display = df.drop(columns=["video_id"]).rename(columns={
-    "baslik": "Baslik",
-    "kanal": "Kanal",
-    "kategori": "Kategori",
-    "goruntulenme": "Goruntulenme",
-    "begeni": "Begeni",
-    "yorum": "Yorum",
-    "etkilesim_orani": "Etkilesim %",
-    "begeni_orani": "Begeni %",
-    "sure_dk": "Sure (dk)",
-    "yayın_tarihi": "Yayin Tarihi",
-    "yayın_saati": "Saat",
-    "tag_sayisi": "Tag",
-})
-df_display.index = range(1, len(df_display) + 1)
-df_display.index.name = "No"
-st.dataframe(df_display, use_container_width=True, hide_index=False, height=320)
+df_display = df.copy()
+df_display.insert(0, "No", range(1, len(df_display) + 1))
+st.table(df_display.set_index("No"))
 
 csv_bytes = df_display.to_csv(index=True).encode("utf-8")
 st.download_button(
@@ -301,22 +310,35 @@ fig_kat_ort.update_layout(
 )
 st.plotly_chart(fig_kat_ort, use_container_width=True)
 
-# Grafik 4: Kategoriye gore yorum box plot
-fig_yorum_box = px.box(
-    df, x="kategori", y="yorum",
-    title="Kategoriye Gore Yorum Sayisi Dagilimi",
-    labels={"yorum": "Yorum Sayisi", "kategori": "Kategori"},
-    color="kategori",
-    color_discrete_sequence=px.colors.qualitative.Pastel,
-    points="outliers",
+# Grafik 4: Begeni sayisi dagilimi
+fig_begeni_hist = px.histogram(
+    df, x="begeni", nbins=20,
+    title="Begeni Sayisi Dagilimi",
+    labels={"begeni": "Begeni Sayisi", "count": "Video Sayisi"},
+    color_discrete_sequence=["#f783ac"],
 )
-fig_yorum_box.update_layout(
+fig_begeni_hist.update_traces(marker_line_color="white", marker_line_width=1)
+fig_begeni_hist.update_layout(bargap=0.05, margin=dict(t=50, b=40), height=400)
+st.plotly_chart(fig_begeni_hist, use_container_width=True)
+
+# Grafik 5: Kategoriye gore ortalama yorum bar chart
+kat_yorum = df.groupby("kategori")["yorum"].mean().reset_index().sort_values("yorum", ascending=True)
+fig_yorum_bar = px.bar(
+    kat_yorum, x="yorum", y="kategori", orientation="h",
+    title="Kategoriye Gore Ortalama Yorum Sayisi",
+    labels={"yorum": "Ortalama Yorum", "kategori": "Kategori"},
+    color="yorum",
+    color_continuous_scale="Blues",
+    text="yorum",
+)
+fig_yorum_bar.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
+fig_yorum_bar.update_layout(
+    coloraxis_showscale=False,
     showlegend=False,
-    xaxis_tickangle=-30,
-    margin=dict(t=50, b=80),
+    margin=dict(t=50, b=20, l=10, r=80),
     height=420,
 )
-st.plotly_chart(fig_yorum_box, use_container_width=True)
+st.plotly_chart(fig_yorum_bar, use_container_width=True)
 
 # Grafik 5: Kanal bazli toplam goruntulenme (en cok izlenen 15 kanal)
 kanal_hizli = (
@@ -342,39 +364,10 @@ st.divider()
 
 
 # ─────────────────────────────────────────────────────────────
-#  BOLUM 1 — Betimsel Istatistikler
+#  BOLUM 1 — Kategori Dagilimi
 # ─────────────────────────────────────────────────────────────
-st.header("1. Betimsel Istatistikler")
-
-st.markdown(
-    """
-    Betimsel istatistikler, veri setinin genel yapisini anlamak icin kullanilan temel olcutlerdir.
-    Ortalama, medyan, standart sapma ve ceyrekler arasi aralik gibi degerler;
-    verideki merkezi egilimi, yayilimi ve olagandisiliklari ortaya koyar.
-    Asagida sayisal degiskenlere ait ozet istatistikler yer almaktadir.
-    """
-)
-
 num_cols = ["goruntulenme", "begeni", "yorum", "etkilesim_orani", "sure_dk", "tag_sayisi"]
-desc = df[num_cols].describe().round(2)
-desc.index = ["Gozlem", "Ortalama", "Std Sapma", "Min", "Q1 (%25)", "Medyan (%50)", "Q3 (%75)", "Max"]
-desc.columns = ["Goruntulenme", "Begeni", "Yorum", "Etkilesim %", "Sure (dk)", "Tag Sayisi"]
-
-st.dataframe(desc, use_container_width=True)
-
-col_s1, col_s2, col_s3, col_s4 = st.columns(4)
-col_s1.metric("Ort. Goruntulenme", f"{df['goruntulenme'].mean():,.0f}")
-col_s2.metric("Medyan Goruntulenme", f"{df['goruntulenme'].median():,.0f}")
-col_s3.metric("Ort. Etkilesim %", f"{df['etkilesim_orani'].mean():.3f}%")
-col_s4.metric("Ort. Video Suresi", f"{df['sure_dk'].mean():.1f} dk")
-
-st.divider()
-
-
-# ─────────────────────────────────────────────────────────────
-#  BOLUM 3 — Kategori Dagilimi
-# ─────────────────────────────────────────────────────────────
-st.header("2. Kategori Dagilimi")
+st.header("1. Kategori Dagilimi")
 
 st.markdown(
     """
@@ -420,7 +413,7 @@ st.divider()
 # ─────────────────────────────────────────────────────────────
 #  BOLUM 4 — Goruntulenme Dagilimi (Histogram + Box Plot)
 # ─────────────────────────────────────────────────────────────
-st.header("3. Goruntulenme Dagilimi")
+st.header("2. Goruntulenme Dagilimi")
 
 st.markdown(
     """
@@ -433,45 +426,15 @@ st.markdown(
     """
 )
 
-col_h1, col_h2 = st.columns(2)
-with col_h1:
-    fig_hist = px.histogram(
-        df, x="goruntulenme", nbins=15,
-        title="Goruntulenme Sayisi Histogrami",
-        labels={"goruntulenme": "Goruntulenme", "count": "Video Sayisi"},
-        color_discrete_sequence=["#4dabf7"],
-    )
-    fig_hist.update_layout(bargap=0.05, margin=dict(t=50, b=30))
-    st.plotly_chart(fig_hist, use_container_width=True)
-
-with col_h2:
-    fig_box = px.box(
-        df, y="goruntulenme",
-        title="Goruntulenme Kutu Grafigi (Box Plot)",
-        labels={"goruntulenme": "Goruntulenme"},
-        color_discrete_sequence=["#74c0fc"],
-        points="all",
-    )
-    fig_box.update_layout(margin=dict(t=50, b=30))
-    st.plotly_chart(fig_box, use_container_width=True)
-
-# Log olcekli histogram
-st.markdown(
-    """
-    **Log olcekli dagilim:** Goruntulenme degerleri normal dagilimdan uzak oldugu icin
-    logaritmik olcek uygulandiginda dagilim daha simetrik bir goruntu kazanmaktadir.
-    Bu durum, verinin log-normal bir dagilim sergiledigine isaret etmektedir.
-    """
+fig_hist = px.histogram(
+    df, x="goruntulenme", nbins=15,
+    title="Goruntulenme Sayisi Histogrami",
+    labels={"goruntulenme": "Goruntulenme", "count": "Video Sayisi"},
+    color_discrete_sequence=["#4dabf7"],
 )
-df["log_goruntulenme"] = np.log1p(df["goruntulenme"])
-fig_loghist = px.histogram(
-    df, x="log_goruntulenme", nbins=20,
-    title="Goruntulenme Sayisi (Log Olcekli) Histogrami",
-    labels={"log_goruntulenme": "ln(Goruntulenme + 1)", "count": "Video Sayisi"},
-    color_discrete_sequence=["#69db7c"],
-)
-fig_loghist.update_layout(bargap=0.04, margin=dict(t=50, b=30))
-st.plotly_chart(fig_loghist, use_container_width=True)
+fig_hist.update_layout(bargap=0.05, margin=dict(t=50, b=30))
+st.plotly_chart(fig_hist, use_container_width=True)
+
 
 st.divider()
 
@@ -479,7 +442,7 @@ st.divider()
 # ─────────────────────────────────────────────────────────────
 #  BOLUM 5 — Begeni - Goruntulenme Iliskisi
 # ─────────────────────────────────────────────────────────────
-st.header("4. Begeni ile Goruntulenme Arasindaki Iliski")
+st.header("3. Begeni ile Goruntulenme Arasindaki Iliski")
 
 st.markdown(
     """
@@ -524,66 +487,10 @@ st.divider()
 
 
 # ─────────────────────────────────────────────────────────────
-#  BOLUM 6 — Etkilesim Orani Analizi
+#  BOLUM 5 — Korelasyon Matrisi (Isil Harita)
 # ─────────────────────────────────────────────────────────────
-st.header("5. Etkilesim Orani Analizi")
-
-st.markdown(
-    """
-    Etkilesim orani (engagement rate), bir videonun izleyicileri ne kadar harekete gecirdigini
-    gosteren onemli bir performans metrikidir. Bu calismada etkilesim orani
-    (begeni + yorum) / goruntulenme formulu ile hesaplanmistir.
-    Yuksek etkilesim orani genellikle niş topluluklara hitap eden, izleyicinin aktif katilimini
-    tesvik eden iceriklerle iliskilendirilmektedir.
-    Violin grafigi, her kategorinin etkilesim dagilimini ve yogunlugunu ayni anda gostermektedir.
-    """
-)
-
-# Violin plot — etkilesim oranlari kategoriye gore
-kat_engag = df.groupby("kategori")["etkilesim_orani"].mean().sort_values(ascending=False).reset_index()
-fig_eng_bar = px.bar(
-    kat_engag, x="etkilesim_orani", y="kategori", orientation="h",
-    title="Kategoriye Gore Ortalama Etkilesim Orani",
-    labels={"etkilesim_orani": "Ort. Etkilesim %", "kategori": "Kategori"},
-    color="etkilesim_orani",
-    color_continuous_scale="Greens",
-    text="etkilesim_orani",
-)
-fig_eng_bar.update_traces(texttemplate="%{text:.3f}%", textposition="outside")
-fig_eng_bar.update_layout(coloraxis_showscale=False, margin=dict(t=50, b=10, l=10, r=60))
-st.plotly_chart(fig_eng_bar, use_container_width=True)
-
-# Violin grafiğini yalnizca birden fazla kategori varsa goster
 kat_groups = df["kategori"].value_counts()
-kat_violin_filter = kat_groups[kat_groups >= 2].index.tolist()
-df_violin = df[df["kategori"].isin(kat_violin_filter)]
-
-if len(df_violin["kategori"].unique()) >= 2:
-    st.markdown(
-        """
-        Asagidaki violin grafigi, kategorilerin etkilesim orani dagilimlari icin
-        yogunluk kestirimini gostermektedir. Simetrik ve dar bir violin dusuk
-        degiskenlige; genis ve asimetrik bir violin ise heterojen bir dagilima isaret eder.
-        """
-    )
-    fig_violin = px.violin(
-        df_violin, x="kategori", y="etkilesim_orani",
-        box=True, points="all",
-        title="Kategoriye Gore Etkilesim Orani Dagilimi (Violin + Box)",
-        labels={"etkilesim_orani": "Etkilesim %", "kategori": "Kategori"},
-        color="kategori",
-        color_discrete_sequence=px.colors.qualitative.Set3,
-    )
-    fig_violin.update_layout(showlegend=False, margin=dict(t=50, b=30))
-    st.plotly_chart(fig_violin, use_container_width=True)
-
-st.divider()
-
-
-# ─────────────────────────────────────────────────────────────
-#  BOLUM 7 — Korelasyon Matrisi (Isil Harita)
-# ─────────────────────────────────────────────────────────────
-st.header("6. Degiskenler Arasi Korelasyon Matrisi")
+st.header("4. Degiskenler Arasi Korelasyon Matrisi")
 
 st.markdown(
     """
@@ -625,7 +532,7 @@ st.divider()
 # ─────────────────────────────────────────────────────────────
 #  BOLUM 8 — Video Suresi Analizi
 # ─────────────────────────────────────────────────────────────
-st.header("7. Video Suresi ve Performans")
+st.header("5. Video Suresi ve Performans")
 
 st.markdown(
     """
@@ -682,7 +589,7 @@ st.divider()
 # ─────────────────────────────────────────────────────────────
 #  BOLUM 9 — Kanal Performansi
 # ─────────────────────────────────────────────────────────────
-st.header("8. Kanal Bazli Performans")
+st.header("6. Kanal Bazli Performans")
 
 st.markdown(
     """
@@ -731,7 +638,7 @@ st.divider()
 # ─────────────────────────────────────────────────────────────
 #  BOLUM 10 — Yayin Saati Analizi
 # ─────────────────────────────────────────────────────────────
-st.header("9. Yayin Saati ve Goruntulenme Iliskisi")
+st.header("7. Yayin Saati ve Goruntulenme Iliskisi")
 
 st.markdown(
     """
@@ -783,7 +690,7 @@ st.divider()
 # ─────────────────────────────────────────────────────────────
 #  BOLUM 11 — Genel Degerlendirme
 # ─────────────────────────────────────────────────────────────
-st.header("10. Genel Degerlendirme")
+st.header("8. Genel Degerlendirme")
 
 top3 = df.nlargest(3, "goruntulenme")[["baslik", "kanal", "goruntulenme", "etkilesim_orani"]]
 en_etkilesim = df.nlargest(3, "etkilesim_orani")[["baslik", "kanal", "etkilesim_orani"]]
@@ -817,7 +724,7 @@ st.markdown(
     - Begeni ve goruntulenme arasindaki Pearson korelasyonu **r = {corr_val:.3f}** olarak
       hesaplanmis; bu iki degisken arasinda {'guclu' if corr_val > 0.7 else 'orta duzey'}
       bir pozitif iliski tespit edilmistir.
-    - En yuksek ortalama etkilesim orani **{kat_engag.iloc[0]['kategori']}** kategorisinde
+    - En yuksek ortalama etkilesim orani **{df.groupby('kategori')['etkilesim_orani'].mean().idxmax()}** kategorisinde
       gozlemlenirken en fazla trend video **{df['kategori'].value_counts().idxmax()}**
       kategorisinde yer almaktadir.
     - Video suresi ile goruntulenme arasindaki iliski dogrusal bir gidis izlememekte;
@@ -1041,25 +948,11 @@ def olustur_pdf(df, ulke, corr_val, kat_engag):
         tablo_satiri([k, v], [lw, vw], zebra=(i % 2 == 0))
     pdf.ln(6)
 
-    bolum_basligi("2. Betimsel Istatistikler")
-    num_cols  = ["goruntulenme", "begeni", "yorum", "etkilesim_orani", "sure_dk"]
-    col_names = ["Goruntulenme", "Begeni", "Yorum", "Etkilesim%", "Sure(dk)"]
-    stat_map  = [("Ort.",   "mean"), ("Std",    "std"),  ("Min",    "min"),
-                 ("Q1",     "25%"),  ("Medyan", "50%"),  ("Q3",     "75%"),
-                 ("Maks.",  "max")]
-    lbl_w = round(W * 0.12, 2)
-    dcw   = round((W - lbl_w) / len(num_cols), 2)
-    tablo_basligi([""] + col_names, [lbl_w] + [dcw] * len(num_cols))
-    desc = df[num_cols].describe()
-    for i, (lbl, idx) in enumerate(stat_map):
-        vals = [f"{desc.loc[idx, c]:,.1f}" for c in num_cols]
-        tablo_satiri([lbl] + vals, [lbl_w] + [dcw] * len(num_cols), zebra=(i % 2 == 0))
-
     # =============================================
     # SAYFA 3 - EN COK IZLENEN VIDEOLAR
     # =============================================
     pdf.add_page()
-    bolum_basligi("3. En Cok Izlenen 10 Video")
+    bolum_basligi("2. En Cok Izlenen 10 Video")
     top10_pdf = df.nlargest(10, "goruntulenme")[["baslik", "goruntulenme"]].copy()
     top10_pdf["baslik"] = top10_pdf["baslik"].apply(ascii_yap).str[:32]
     top10_pdf = top10_pdf.sort_values("goruntulenme")
@@ -1074,7 +967,7 @@ def olustur_pdf(df, ulke, corr_val, kat_engag):
     grafik_ekle(fig1)
     pdf.ln(2)
 
-    bolum_basligi("4. En Cok Izlenen 5 Video - Detay")
+    bolum_basligi("3. En Cok Izlenen 5 Video - Detay")
     c_no = round(W * 0.06, 2)
     c_gor = round(W * 0.22, 2)
     c_beg = round(W * 0.14, 2)
@@ -1094,7 +987,7 @@ def olustur_pdf(df, ulke, corr_val, kat_engag):
     # SAYFA 4 - KATEGORI ANALIZI
     # =============================================
     pdf.add_page()
-    bolum_basligi("5. Kategori Dagilimi")
+    bolum_basligi("4. Kategori Dagilimi")
     kat_say = df["kategori"].value_counts().reset_index()
     kat_say.columns = ["Kategori", "Sayi"]
     kat_say["Kategori"] = kat_say["Kategori"].apply(ascii_yap)
@@ -1107,7 +1000,7 @@ def olustur_pdf(df, ulke, corr_val, kat_engag):
                        paper_bgcolor="white")
     grafik_ekle(fig2)
 
-    bolum_basligi("6. Kategoriye Gore Ortalama Etkilesim Orani")
+    bolum_basligi("5. Kategoriye Gore Ortalama Etkilesim Orani")
     ke = kat_engag.copy()
     ke["kategori"] = ke["kategori"].apply(ascii_yap).str[:28]
     n_kat = len(ke)
@@ -1126,7 +1019,7 @@ def olustur_pdf(df, ulke, corr_val, kat_engag):
     # SAYFA 5 - KORELASYON
     # =============================================
     pdf.add_page()
-    bolum_basligi("7. Korelasyon Matrisi")
+    bolum_basligi("6. Korelasyon Matrisi")
     pdf.set_font("Helvetica", "", 9)
     pdf.set_text_color(*C_GRAY)
     pdf.set_x(pdf.l_margin)
@@ -1149,7 +1042,7 @@ def olustur_pdf(df, ulke, corr_val, kat_engag):
     # SAYFA 6 - DEGERLENDIRME
     # =============================================
     pdf.add_page()
-    bolum_basligi("8. Genel Degerlendirme ve Bulgular")
+    bolum_basligi("7. Genel Degerlendirme ve Bulgular")
 
     iliski = ("Guclu pozitif iliski" if corr_val > 0.7
               else "Orta duzey iliski" if corr_val > 0.4
@@ -1368,6 +1261,8 @@ def olustur_excel(df, ulke, corr_val, kat_engag):
     wb.save(buf)
     return buf.getvalue()
 
+
+kat_engag = df.groupby("kategori")["etkilesim_orani"].mean().sort_values(ascending=False).reset_index()
 
 if st.button("PDF Raporu Olustur ve Indir", type="primary"):
     with st.spinner("PDF hazirlaniyor..."):
